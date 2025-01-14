@@ -1,0 +1,100 @@
+## Sentiment Analysis on Hotel Reviews
+
+### Overview
+This project analyzes hotel reviews to extract insights into service quality, customer satisfaction, and common issues. Using Natural Language Processing (NLP) and Machine Learning (ML), it classifies reviews as positive, negative, or neutral.
+
+### Code Implementation
+
+#### Import Libraries
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from wordcloud import WordCloud
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+```
+
+#### Load Dataset
+```python
+data = pd.read_csv("hotel_reviews.csv")
+
+# Basic Data Exploration
+print(data.head())
+print(data.info())
+
+# Check for Missing Values
+print(data.isnull().sum())
+
+# Drop Missing Values
+data.dropna(inplace=True)
+```
+
+#### Preprocessing Function
+```python
+def preprocess_text(text):
+    text = text.lower()
+    text = ''.join([char for char in text if char.isalnum() or char.isspace()])
+    return text
+
+# Apply Preprocessing
+data['Review_Text'] = data['Review_Text'].apply(preprocess_text)
+```
+
+#### Visualize Sentiment Distribution
+```python
+sns.countplot(data['Sentiment'])
+plt.title("Sentiment Distribution")
+plt.show()
+```
+
+#### Generate WordCloud for Positive Reviews
+```python
+positive_reviews = ' '.join(data[data['Sentiment'] == 'positive']['Review_Text'])
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(positive_reviews)
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title("WordCloud for Positive Reviews")
+plt.show()
+```
+
+#### Feature Extraction
+```python
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(data['Review_Text'])
+y = data['Sentiment']
+```
+
+#### Split Data
+```python
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+#### Train Model
+```python
+model = MultinomialNB()
+model.fit(X_train, y_train)
+```
+
+#### Predict
+```python
+predictions = model.predict(X_test)
+```
+
+#### Evaluate Model
+```python
+print("Accuracy:", accuracy_score(y_test, predictions))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, predictions))
+print("\nClassification Report:\n", classification_report(y_test, predictions))
+```
+
+#### Save Model and Vectorizer
+```python
+import pickle
+pickle.dump(model, open("sentiment_model.pkl", "wb"))
+pickle.dump(vectorizer, open("vectorizer.pkl", "wb"))
+```
